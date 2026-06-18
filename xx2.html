@@ -1,0 +1,727 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>OCR Studio Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<style>
+  :root{--bg-0:#081d1d;--bg-1:#0b2828;--panel:#0f3333;--panel-2:#103a39;--teal:#15b8a6;--teal-deep:#0f766e;--gold:#d8b24a;--gold-soft:#ecd089;--gold-line:rgba(216,178,74,.22);--text:#eef6f3;--muted:#93b3ad;--muted-2:#6d9690;--danger:#e98b6b;--radius:18px;--radius-sm:12px;--shadow:0 18px 50px -18px rgba(0,0,0,.7)}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:'Sora',system-ui,-apple-system,sans-serif;color:var(--text);background:radial-gradient(1200px 700px at 80% -10%,rgba(21,184,166,.10),transparent 60%),radial-gradient(900px 600px at -10% 110%,rgba(216,178,74,.07),transparent 55%),linear-gradient(160deg,var(--bg-0),var(--bg-1));background-attachment:fixed;min-height:100vh;line-height:1.5;-webkit-text-size-adjust:100%;padding:calc(env(safe-area-inset-top) + 22px) calc(env(safe-area-inset-right) + 16px) calc(env(safe-area-inset-bottom) + 40px) calc(env(safe-area-inset-left) + 16px)}
+  .wrap{max-width:880px;margin:0 auto}
+  header{display:flex;align-items:center;gap:14px;margin-bottom:26px}
+  .mark{width:46px;height:46px;flex:0 0 auto;border-radius:13px;background:linear-gradient(155deg,var(--teal),var(--teal-deep));display:grid;place-items:center;box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.08)}
+  .mark svg{width:26px;height:26px}
+  h1{font-family:'DM Serif Display',serif;font-weight:400;font-size:30px;margin:0;letter-spacing:.2px;display:flex;align-items:center;flex-wrap:wrap;}
+  h1 .dot{color:var(--gold)}
+  .pro-badge{color:var(--gold); font-family:'Sora'; font-size:11px; font-weight:700; letter-spacing:0.1em; vertical-align:middle; padding:2px 6px; border:1px solid var(--gold); border-radius:6px; margin-left:10px; background:rgba(216,178,74,0.1);}
+  header p{margin:2px 0 0;color:var(--muted);font-size:13.5px; width: 100%;}
+  .card{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--gold-line);border-radius:var(--radius);padding:20px;margin-bottom:18px;box-shadow:var(--shadow)}
+  .card h2{font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-soft);margin:0 0 16px}
+  .settings{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:560px){.settings{grid-template-columns:1fr}}
+  .field{min-width:0}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:7px;font-weight:500}
+  .seg{display:flex;background:rgba(0,0,0,.25);border:1px solid var(--gold-line);border-radius:11px;padding:3px;gap:3px}
+  .seg button{flex:1;border:0;background:transparent;color:var(--muted);font-family:'Sora';font-size:13px;font-weight:600;padding:9px 4px;border-radius:8px;cursor:pointer;transition:background .15s,color .15s}
+  .seg button[aria-pressed="true"]{background:linear-gradient(155deg,var(--teal),var(--teal-deep));color:#04201d}
+  select{width:100%;appearance:none;-webkit-appearance:none;background:rgba(0,0,0,.25);color:var(--text);border:1px solid var(--gold-line);border-radius:11px;padding:11px 38px 11px 13px;font-family:'Sora';font-size:13.5px;font-weight:500;cursor:pointer;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%23d8b24a' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");background-repeat:no-repeat;background-position:right 13px center}
+  select:disabled{opacity:.45}
+  .rangewrap{display:flex;align-items:center;gap:12px}
+  input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:6px;background:rgba(0,0,0,.35);outline:none}
+  input[type=range]:disabled{opacity:.45}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:linear-gradient(155deg,var(--gold-soft),var(--gold));cursor:pointer;border:2px solid #2a1f04}
+  input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--gold);cursor:pointer;border:2px solid #2a1f04}
+  .rv{flex:0 0 auto;font-size:13px;font-weight:700;color:var(--gold-soft);font-variant-numeric:tabular-nums;min-width:64px;text-align:right}
+  .adv{margin-top:16px;border:1px solid var(--gold-line);border-radius:12px;overflow:hidden;background:rgba(0,0,0,.14)}
+  .adv>summary{padding:13px 15px;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--gold-soft);letter-spacing:.04em;list-style:none;display:flex;align-items:center;gap:9px}
+  .adv>summary::-webkit-details-marker{display:none}
+  .adv>summary .chev{transition:transform .15s;color:var(--gold)}
+  .adv[open]>summary .chev{transform:rotate(90deg)}
+  .adv-body{padding:4px 15px 16px;display:flex;flex-direction:column;gap:15px}
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:560px){.twocol{grid-template-columns:1fr}}
+  .check{display:flex;align-items:flex-start;gap:10px;font-size:12.5px;color:var(--muted);cursor:pointer;line-height:1.45}
+  .check input{margin-top:2px;width:16px;height:16px;accent-color:var(--teal);flex:0 0 auto}
+  .check b{color:var(--text);font-weight:600}
+  .dict{width:100%;min-height:64px;resize:vertical;background:rgba(0,0,0,.25);border:1px solid var(--gold-line);border-radius:10px;color:var(--text);font-family:'Sora';font-size:13px;line-height:1.6;padding:10px 12px}
+  .dict:focus{outline:none;border-color:var(--teal)}
+  .hint{font-size:11px;color:var(--muted-2);margin-top:5px}
+  .drop{margin-top:4px;border:1.5px dashed var(--gold-line);border-radius:var(--radius-sm);padding:30px 18px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;background:rgba(0,0,0,.12)}
+  .drop:hover,.drop.over{border-color:var(--teal);background:rgba(21,184,166,.07)}
+  .drop .big{font-size:15px;font-weight:600;margin-bottom:4px}
+  .drop .sml{font-size:12.5px;color:var(--muted)}
+  .drop svg{width:30px;height:30px;margin-bottom:10px;opacity:.85}
+  .files{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+  .files li{display:flex;align-items:center;gap:11px;background:rgba(0,0,0,.22);border:1px solid var(--gold-line);border-radius:10px;padding:10px 12px;font-size:13px}
+  .files .ic{width:18px;height:18px;flex:0 0 auto;opacity:.8}
+  .files .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .files .mt{color:var(--muted);font-size:11.5px;flex:0 0 auto}
+  .files .rm{background:none;border:0;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;padding:0 2px}
+  .files .rm:hover{color:var(--danger)}
+  .row{display:flex;gap:12px;margin-top:18px}
+  .btn{flex:1;border:0;border-radius:13px;padding:15px;font-family:'Sora';font-size:15px;font-weight:700;cursor:pointer;transition:transform .08s,filter .15s,opacity .15s;letter-spacing:.2px}
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:linear-gradient(150deg,var(--gold-soft),var(--gold));color:#2a1f04;box-shadow:0 10px 28px -12px rgba(216,178,74,.7)}
+  .btn-ghost{flex:0 0 auto;background:rgba(0,0,0,.25);color:var(--muted);border:1px solid var(--gold-line);padding:15px 18px}
+  .btn:disabled{opacity:.4;cursor:not-allowed;filter:grayscale(.3)}
+  #progress{display:none}
+  .status{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:9px;gap:10px}
+  .status .lbl{color:var(--text);font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .status .pct{color:var(--gold-soft);font-weight:700;flex:0 0 auto;font-variant-numeric:tabular-nums}
+  .bar{height:9px;background:rgba(0,0,0,.3);border-radius:6px;overflow:hidden}
+  .bar>i{display:block;height:100%;width:0;border-radius:6px;background:linear-gradient(90deg,var(--teal),var(--gold));transition:width .25s ease}
+  .sub{font-size:12px;color:var(--muted);margin-top:9px;min-height:16px}
+  #results{display:none}
+  .res-tools{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:14px}
+  .stat{font-size:12px;color:var(--muted)}.stat b{color:var(--text);font-weight:600}
+  .spacer{flex:1}
+  .mini{border:1px solid var(--gold-line);background:rgba(0,0,0,.22);color:var(--text);border-radius:9px;padding:8px 13px;font-family:'Sora';font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px; transition:all .15s ease;}
+  .mini:hover{border-color:var(--teal)}
+  .mini svg{width:14px;height:14px}
+  .ai-btn {background: linear-gradient(155deg, rgba(216,178,74,0.15), rgba(216,178,74,0.05)); border-color: var(--gold); color: var(--gold);}
+  .ai-btn:hover {background: rgba(216,178,74,0.25); border-color: #f1c453;}
+  .ai-btn svg {stroke: var(--gold);}
+  .ai-btn:disabled {opacity: 0.6; cursor: wait;}
+  textarea#output{width:100%;min-height:230px;resize:vertical;background:rgba(0,0,0,.28);border:1px solid var(--gold-line);border-radius:var(--radius-sm);color:var(--text);font-family:'Sora';font-size:14px;line-height:1.7;padding:15px; transition: border-color 0.3s;}
+  textarea#output.ai-fixed { border-color: var(--gold); box-shadow: 0 0 15px rgba(216,178,74,0.15); }
+  textarea#output:focus{outline:none;border-color:var(--teal)}
+  .pages{margin-top:14px;display:flex;flex-direction:column;gap:9px}
+  details.pg{background:rgba(0,0,0,.2);border:1px solid var(--gold-line);border-radius:10px;overflow:hidden}
+  details.pg>summary{padding:12px 14px;cursor:pointer;font-size:13px;font-weight:600;display:flex;align-items:center;gap:10px;list-style:none}
+  details.pg>summary::-webkit-details-marker{display:none}
+  details.pg .chev{transition:transform .15s;color:var(--gold);flex:0 0 auto}
+  details.pg[open] .chev{transform:rotate(90deg)}
+  .pg .tag{margin-left:auto;font-size:10.5px;color:var(--muted);font-weight:600;flex:0 0 auto;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+  .page-body{padding:0 14px 14px;display:flex;gap:14px;align-items:flex-start}
+  @media(max-width:560px){.page-body{flex-direction:column}}
+  .thumb{flex:0 0 auto;width:150px;border:1px solid var(--gold-line);border-radius:8px;background:#fff;overflow:hidden}
+  .thumb img{display:block;width:100%}
+  .thumb .cap{font-size:10px;color:#5a7a74;text-align:center;padding:3px;background:rgba(0,0,0,.04)}
+  .page-text{flex:1;min-width:0;font-size:13.5px;line-height:1.7;white-space:pre-wrap;word-break:break-word;color:var(--text)}
+  .note{font-size:11.5px;color:var(--muted-2);margin-top:16px;line-height:1.6}.note b{color:var(--muted)}
+  .err{display:none;background:rgba(233,139,107,.1);border:1px solid rgba(233,139,107,.35);color:#f3c4b3;border-radius:10px;padding:12px 14px;font-size:13px;margin-top:14px}
+  @keyframes spin { 100% { transform: rotate(360deg); } }
+  .spinner { animation: spin 1s linear infinite; }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#eafffb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2"/><path d="M7 9h10M7 12h10M7 15h6"/></svg></div>
+    <div>
+      <h1>OCR Studio<span class="pro-badge">PRO</span><span class="dot">.</span></h1>
+      <p>Maximum Accuracy Text Extraction &middot; English &amp; Arabic</p>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2>Accuracy Settings</h2>
+    
+    <div class="settings">
+      <div class="field">
+        <label>Language</label>
+        <div class="seg" id="langSeg" role="group" aria-label="Language">
+          <button data-lang="eng" aria-pressed="true">English</button>
+          <button data-lang="ara" aria-pressed="false">Arabic</button>
+          <button data-lang="auto" aria-pressed="false">Auto detect</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="layout">Page layout (PSM)</label>
+        <select id="layout">
+          <option value="3" selected>Auto &middot; recommended</option>
+          <option value="6">Single block (exam paper)</option>
+          <option value="4">Single column</option>
+          <option value="1">Auto + orientation (rotated scans)</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="twocol" style="margin-top: 16px;">
+      <div class="field">
+        <label for="modelQuality">Tesseract Core Model</label>
+        <select id="modelQuality">
+          <option value="fast" selected>Fast (Standard Accuracy)</option>
+          <option value="best">Best (Maximum Accuracy - Slower)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="exhaustive">Auto-Optimize Strategy</label>
+        <select id="exhaustive">
+          <option value="standard" selected>Standard Sweep (Otsu Only)</option>
+          <option value="deep">Exhaustive Sweep (Tests Otsu, Sauvola, Adaptive B/W)</option>
+        </select>
+      </div>
+    </div>
+
+    <details class="adv" open>
+      <summary><svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2l4 4-4 4"/></svg>Manual tuning (Disabled during Auto-Optimize)</summary>
+      <div class="adv-body">
+        <label class="check"><input type="checkbox" id="optimize" checked><span><b>Enable Auto-Optimize</b> &mdash; Sweeps configurations and keeps the highest-confidence text. Disabling this allows manual control below.</span></label>
+
+        <div class="twocol" id="manualControls">
+          <div class="field">
+            <label for="clean">Manual Image cleanup</label>
+            <select id="clean">
+              <option value="otsu" selected>High-contrast B/W (Otsu)</option>
+              <option value="doc">Document B/W (adaptive)</option>
+              <option value="sauvola">Adaptive (Sauvola) &middot; uneven light</option>
+              <option value="gray">Grayscale + contrast</option>
+              <option value="none">Original (no cleanup)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="zoom">Manual Zoom (upscale)</label>
+            <select id="zoom"><option value="1">1x</option><option value="1.5">1.5x</option><option value="2" selected>2x</option><option value="3">3x</option></select>
+          </div>
+          <div class="field">
+            <label for="dpi">Manual Resolution</label>
+            <div class="rangewrap"><input type="range" id="dpi" min="140" max="420" step="10" value="300"><span class="rv" id="dpiVal">300 DPI</span></div>
+          </div>
+          <div class="field">
+            <label for="bias">Threshold bias</label>
+            <div class="rangewrap"><input type="range" id="bias" min="-60" max="40" step="2" value="-40"><span class="rv" id="biasVal">-40</span></div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:11px; margin-top: 8px;">
+          <label class="check"><input type="checkbox" id="tidy" checked><span><b>Tidy output</b> &mdash; strip stray junk symbols (the &amp; ! &quot; noise).</span></label>
+          <label class="check"><input type="checkbox" id="split" checked><span><b>Split merged words</b> &mdash; fix run-together words using dictionary.</span></label>
+          <label class="check"><input type="checkbox" id="preferdict"><span><b>Prefer dictionary words</b> &mdash; nudge the engine toward real words.</span></label>
+          <label class="check"><input type="checkbox" id="deskew"><span><b>Deskew</b> &mdash; straighten tilted scans.</span></label>
+          <label class="check"><input type="checkbox" id="sharpen"><span><b>Sharpen</b> &mdash; recover edges on blurry photos.</span></label>
+          <label class="check"><input type="checkbox" id="despeckle"><span><b>Despeckle</b> &mdash; drop isolated noise dots.</span></label>
+          <label class="check"><input type="checkbox" id="embedded" checked><span><b>Use the PDF text layer</b> when present (perfect output on digital PDFs).</span></label>
+        </div>
+
+        <div class="field">
+          <label for="userdict">Custom dictionary &mdash; your vocabulary, names, lesson words</label>
+          <textarea class="dict" id="userdict" spellcheck="false" placeholder="Paste words separated by spaces, commas, or new lines. Boosts recognition."></textarea>
+        </div>
+      </div>
+    </details>
+
+    <div class="field" style="margin-top:16px">
+      <label>Files</label>
+      <div class="drop" id="drop" tabindex="0" role="button" aria-label="Add files">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#d8b24a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M5 16v3a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3"/></svg>
+        <div class="big">Tap to add or drop files</div><div class="sml">Images (PNG, JPG, WEBP) or PDF</div>
+      </div>
+    </div>
+    <input type="file" id="input" accept="image/*,application/pdf" multiple hidden>
+    <ul class="files" id="fileList"></ul>
+
+    <div class="row"><button class="btn btn-primary" id="run" disabled>Extract text</button><button class="btn btn-ghost" id="clear">Clear</button></div>
+    <div class="err" id="error"></div>
+    <p class="note"><b>Pro Accuracy Features:</b> Selecting the <b>Tesseract Best</b> model utilizes a heavier, highly accurate neural network. The <b>Exhaustive Sweep</b> strategy tests multiple mathematical binarization algorithms (Otsu, Sauvola, Adaptive) automatically to find the perfect contrast for difficult scans. Once extracted, you can use the <b>✨ Fix with AI</b> button to contextualize and correct remaining OCR typos.</p>
+  </section>
+
+  <section class="card" id="progress">
+    <h2>Working</h2>
+    <div class="status"><span class="lbl" id="pLabel">Preparing...</span><span class="pct" id="pPct">0%</span></div>
+    <div class="bar"><i id="pBar"></i></div>
+    <div class="sub" id="pSub"></div>
+  </section>
+
+  <section class="card" id="results">
+    <h2>Extracted text</h2>
+    <div class="res-tools">
+      <span class="stat" id="sPages"></span><span class="stat" id="sWords"></span><span class="stat" id="sConf"></span>
+      <span class="spacer"></span>
+      <button class="mini ai-btn" id="aiFix" title="Uses AI to correct spelling and formatting based on context">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        Fix with AI
+      </button>
+      <button class="mini" id="copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>Copy</button>
+      <button class="mini" id="download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M8 11l4 4 4-4"/><path d="M5 20h14"/></svg>.txt</button>
+    </div>
+    <textarea id="output" dir="auto" spellcheck="false" placeholder="Extracted text will appear here..."></textarea>
+    <div class="pages" id="pages"></div>
+  </section>
+
+</div>
+
+<script>
+"use strict";
+
+/* built-in dictionaries (ASCII-escaped, injected at build) */
+var BUILTIN_AR=["\u0645\u0646", "\u0641\u064a", "\u0639\u0644\u0649", "\u0625\u0644\u0649", "\u0639\u0646", "\u0645\u0639", "\u0647\u0630\u0627", "\u0647\u0630\u0647", "\u0630\u0644\u0643", "\u062a\u0644\u0643", "\u0627\u0644\u062a\u064a", "\u0627\u0644\u0630\u064a", "\u0627\u0644\u0630\u064a\u0646", "\u0623\u0646", "\u0625\u0646", "\u0643\u0627\u0646", "\u0643\u0627\u0646\u062a", "\u0642\u062f", "\u0644\u0642\u062f", "\u0644\u0627", "\u0645\u0627", "\u0644\u0645", "\u0644\u0646", "\u0647\u0644", "\u0647\u0648", "\u0647\u064a", "\u0647\u0645", "\u0623\u0646\u062a", "\u0623\u0646\u0627", "\u0646\u062d\u0646", "\u0643\u0644", "\u0628\u0639\u0636", "\u0639\u0646\u062f", "\u0639\u0646\u062f\u0645\u0627", "\u0623\u0648", "\u062b\u0645", "\u062d\u062a\u0649", "\u0625\u0630\u0627", "\u0643\u064a", "\u0644\u0643\u064a", "\u0643\u0645\u0627", "\u0628\u064a\u0646", "\u062a\u062d\u062a", "\u0641\u0648\u0642", "\u0623\u0645\u0627\u0645", "\u062e\u0644\u0641", "\u0642\u0628\u0644", "\u0628\u0639\u062f", "\u0627\u0644\u0622\u0646", "\u0647\u0646\u0627", "\u0647\u0646\u0627\u0643", "\u0646\u0639\u0645", "\u0623\u064a\u0636\u0627", "\u0641\u0642\u0637", "\u062c\u062f\u0627", "\u063a\u064a\u0631", "\u0633\u0648\u0641", "\u0644\u0643\u0646", "\u0644\u0623\u0646", "\u0644\u0630\u0644\u0643", "\u062d\u0648\u0644", "\u0628\u0647", "\u0628\u0647\u0627", "\u0644\u0647", "\u0644\u0647\u0627", "\u0644\u0647\u0645", "\u0645\u0646\u0647\u0627", "\u0645\u0646\u0647", "\u0641\u064a\u0647\u0627", "\u0641\u064a\u0647", "\u0639\u0644\u064a\u0647\u0627", "\u0639\u0644\u064a\u0647", "\u0625\u0644\u064a\u0647", "\u0642\u0627\u0644", "\u064a\u0642\u0648\u0644", "\u0642\u0627\u0644\u062a", "\u062c\u0631\u0628", "\u062a\u062c\u0631\u0628\u0629", "\u062a\u062c\u0627\u0631\u0628", "\u0627\u0643\u062a\u0628", "\u0627\u0642\u0631\u0623", "\u0627\u0646\u0638\u0631", "\u062a\u0639\u0644\u0645", "\u064a\u062a\u0639\u0644\u0645", "\u0627\u0641\u0639\u0644", "\u0627\u0639\u0645\u0644", "\u064a\u0643\u062a\u0634\u0641", "\u064a\u0643\u062a\u0634\u0641\u0647\u0627", "\u0627\u0643\u062a\u0634\u0627\u0641", "\u0627\u0643\u062a\u0634\u0641", "\u062a\u0646\u062a\u0638\u0631", "\u064a\u0646\u062a\u0638\u0631", "\u0627\u0646\u062a\u0638\u0631", "\u0634\u0627\u0631\u0643", "\u0634\u0627\u0631\u0643\u0647\u0645", "\u064a\u0634\u0627\u0631\u0643", "\u062a\u0646\u0633", "\u0627\u0646\u0633", "\u0627\u0633\u0623\u0644", "\u0623\u0633\u0623\u0644", "\u064a\u0633\u0623\u0644", "\u0633\u0624\u0627\u0644", "\u062a\u0630\u0643\u0631", "\u0627\u0633\u062a\u0645\u062a\u0639", "\u0627\u0644\u0639\u0628", "\u064a\u0644\u0639\u0628", "\u0627\u0635\u0646\u0639", "\u064a\u0635\u0646\u0639", "\u062d\u0627\u0648\u0644", "\u064a\u062d\u0627\u0648\u0644", "\u0627\u0644\u0639\u0644\u0645", "\u0627\u0644\u0639\u0644\u0648\u0645", "\u0627\u0644\u0645\u0639\u0631\u0641\u0629", "\u0627\u0644\u0645\u0627\u0621", "\u0627\u0644\u0628\u064a\u062a", "\u0627\u0644\u0645\u0646\u0632\u0644", "\u0627\u0644\u0645\u062f\u0631\u0633\u0629", "\u0627\u0644\u0645\u0639\u0644\u0645", "\u0627\u0644\u0637\u0627\u0644\u0628", "\u0627\u0644\u0637\u0644\u0627\u0628", "\u0627\u0644\u0643\u062a\u0627\u0628", "\u0627\u0644\u0643\u062a\u0628", "\u0627\u0644\u062f\u0631\u0633", "\u0627\u0644\u062f\u0631\u0648\u0633", "\u0627\u0644\u0633\u0624\u0627\u0644", "\u0627\u0644\u0623\u0633\u0626\u0644\u0629", "\u0627\u0644\u062c\u0648\u0627\u0628", "\u0627\u0644\u0625\u062c\u0627\u0628\u0629", "\u0627\u0644\u0623\u0633\u0631\u0627\u0631", "\u0627\u0644\u0633\u0631", "\u0627\u0644\u0623\u0635\u062f\u0642\u0627\u0621", "\u0623\u0635\u062f\u0642\u0627\u0621", "\u0623\u0635\u062f\u0642\u0627\u0626\u0643", "\u0635\u062f\u064a\u0642", "\u0627\u0644\u0635\u0644\u0635\u0627\u0644", "\u0627\u0644\u0644\u0639\u0628\u0629", "\u0627\u0644\u0644\u0639\u0628", "\u0627\u0644\u0645\u062a\u0639\u0629", "\u0627\u0644\u0645\u0645\u062a\u0639\u0629", "\u0645\u0645\u062a\u0639", "\u0645\u0644\u064a\u0621", "\u0645\u0644\u064a\u0626\u0629", "\u062f\u0627\u0626\u0645\u0627", "\u0623\u0628\u062f\u0627", "\u0627\u0644\u0646\u0647\u0627\u064a\u0629", "\u0627\u0644\u0628\u062f\u0627\u064a\u0629", "\u0627\u0644\u0648\u0642\u062a", "\u0627\u0644\u064a\u0648\u0645", "\u0627\u0644\u0633\u0646\u0629", "\u0627\u0644\u0645\u0631\u0629", "\u0627\u0644\u0634\u064a\u0621", "\u0627\u0644\u0623\u0634\u064a\u0627\u0621", "\u0627\u0644\u0637\u0631\u064a\u0642\u0629", "\u0627\u0644\u0641\u0643\u0631\u0629", "\u0643\u0628\u064a\u0631", "\u0635\u063a\u064a\u0631", "\u062c\u0645\u064a\u0644", "\u062c\u062f\u064a\u062f", "\u0642\u062f\u064a\u0645", "\u0633\u0631\u064a\u0639", "\u0633\u0647\u0644", "\u0635\u0639\u0628", "\u0645\u0647\u0645", "\u0631\u0627\u0626\u0639", "\u0627\u0644\u0639\u0627\u0644\u0645", "\u0627\u0644\u062d\u064a\u0627\u0629", "\u0627\u0644\u0625\u0646\u0633\u0627\u0646", "\u0627\u0644\u0637\u0627\u0642\u0629", "\u0627\u0644\u062d\u0631\u0643\u0629", "\u0627\u0644\u0642\u0648\u0629", "\u0627\u0644\u0636\u0648\u0621", "\u0627\u0644\u0635\u0648\u062a", "\u0627\u0644\u062d\u0631\u0627\u0631\u0629", "\u0627\u0644\u0645\u0644\u0627\u062d\u0638\u0629", "\u0627\u0644\u0646\u062a\u064a\u062c\u0629", "\u0627\u0644\u0633\u0628\u0628", "\u0627\u0644\u0645\u062b\u0627\u0644"];
+var BUILTIN_EN=["the", "of", "and", "a", "to", "in", "is", "you", "that", "it", "he", "was", "for", "on", "are", "as", "with", "his", "they", "i", "at", "be", "this", "have", "from", "or", "one", "had", "by", "word", "but", "not", "what", "all", "were", "we", "when", "your", "can", "said", "there", "use", "an", "each", "which", "she", "do", "how", "their", "if", "will", "up", "other", "about", "out", "many", "then", "them", "these", "so", "some", "her", "would", "make", "like", "him", "into", "time", "has", "look", "two", "more", "write", "go", "see", "number", "no", "way", "could", "people", "my", "than", "first", "water", "been", "call", "who", "oil", "its", "now", "find", "long", "down", "day", "did", "get", "come", "made", "may", "part", "over", "new", "sound", "take", "only", "little", "work", "know", "place", "year", "live", "me", "back", "give", "most", "very", "after", "thing", "our", "just", "name", "good", "sentence", "man", "think", "say", "great", "where", "help", "through", "much", "before", "line", "right", "too", "mean", "old", "any", "same", "tell", "boy", "follow", "came", "want", "show", "also", "around", "form", "three", "small", "set", "put", "end", "does", "another", "well", "large", "must", "big", "even", "such", "because", "turn", "here", "why", "ask", "went", "men", "read", "need", "land", "different", "home", "us", "move", "try", "kind", "hand", "picture", "again", "change", "off", "play", "spell", "air", "away", "animal", "house", "point", "page", "letter", "mother", "answer", "found", "study", "still", "learn", "should", "america", "world", "high", "every", "near", "add", "food", "between", "own", "below", "country", "plant", "last", "school", "father", "keep", "tree", "never", "start", "city", "earth", "eyes", "light", "thought", "head", "under", "story", "saw", "left", "few", "while", "might", "close", "something", "seem", "next", "hard", "open", "example", "begin", "life", "always", "those", "both", "paper", "together", "got", "group", "often", "run", "important", "until", "children", "side", "feet", "car", "mile", "night", "walk", "white", "sea", "began", "grow", "took", "river", "four", "carry", "state", "once", "book", "hear", "stop", "without", "second", "later", "miss", "idea", "enough", "eat", "face", "watch", "far", "indian", "really", "almost", "let", "above", "girl", "sometimes", "mountain", "cut", "young", "talk", "soon", "list", "song", "being", "leave", "family", "student", "teacher", "exam", "test", "question", "lesson", "science", "experiment", "friend", "secret", "knowledge", "full", "mystery", "clay", "share", "discover", "wait", "amazing"];
+
+const pdfjsLib = window.pdfjsLib || window["pdfjs-dist/build/pdf"];
+if (pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+const $ = function (id){ return document.getElementById(id); };
+const input=$("input"),drop=$("drop"),fileList=$("fileList"),runBtn=$("run"),clearBtn=$("clear"),errorBox=$("error");
+const progress=$("progress"),pLabel=$("pLabel"),pPct=$("pPct"),pBar=$("pBar"),pSub=$("pSub");
+const results=$("results"),output=$("output"),pagesEl=$("pages"),sPages=$("sPages"),sWords=$("sWords"),sConf=$("sConf");
+const dpiSlider=$("dpi"),dpiVal=$("dpiVal"),biasSlider=$("bias"),biasVal=$("biasVal"),cleanSel=$("clean"),zoomSel=$("zoom"),optChk=$("optimize");
+const modelQuality=$("modelQuality"), exhaustiveMode=$("exhaustive");
+
+let files=[], lang="eng", worker=null, workerSig="", busy=false, jobProgress=function(){};
+let DICT=new Set();
+const MAX_AREA=15000000, MAX_SIDE=4000;
+
+/* ---- yielding helper to allow UI paint during heavy sync loops ---- */
+async function yieldUI() {
+  return new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+}
+
+/* ---- normalization + dictionary ---- */
+function normMap(s){
+  let out="",idx=[];
+  for(let i=0;i<s.length;i++){
+    const code=s.charCodeAt(i); let c=s[i];
+    if((code>=0x64B&&code<=0x652)||code===0x670||code===0x640) continue;
+    if(code===0x623||code===0x625||code===0x622||code===0x671) c="\u0627";
+    else if(code===0x649) c="\u064A";
+    else if(code===0x629) c="\u0647";
+    else if(code>=0x41&&code<=0x5A) c=String.fromCharCode(code+32);
+    out+=c; idx.push(i);
+  }
+  return {norm:out,map:idx};
+}
+function arNorm(w){ return normMap(w).norm; }
+function buildDict(userText){
+  DICT=new Set();
+  BUILTIN_EN.forEach(function(w){ DICT.add(w.toLowerCase()); });
+  BUILTIN_AR.forEach(function(w){ DICT.add(arNorm(w)); });
+  if(userText){ userText.split(/[\s,;\u060C]+/).forEach(function(w){ w=w.trim(); if(w.length>=2) DICT.add(/[\u0600-\u06FF]/.test(w)?arNorm(w):w.toLowerCase()); }); }
+}
+function splitToken(tok){
+  if(tok.length<7) return tok;
+  if(!/[\u0600-\u06FFA-Za-z]/.test(tok)) return tok;
+  const nm=normMap(tok),norm=nm.norm,map=nm.map,n=norm.length;
+  if(n<6||DICT.has(norm)) return tok;
+  const best=new Array(n+1).fill(null); best[0]=[];
+  for(let i=1;i<=n;i++){ for(let j=Math.max(0,i-14);j<i;j++){ if(best[j]!==null){ const seg=norm.slice(j,i); if(seg.length>=2&&DICT.has(seg)){ if(best[i]===null||best[j].length+1<best[i].length) best[i]=best[j].concat([[j,i]]); } } } }
+  if(best[n]!==null&&best[n].length>=2){
+    let res=""; const segs=best[n];
+    for(let k=0;k<segs.length;k++){ const s0=map[segs[k][0]],s1=(segs[k][1]<n?map[segs[k][1]]:tok.length); if(k>0) res+=" "; res+=tok.slice(s0,s1); }
+    return res;
+  }
+  for(let L=Math.min(n-2,14);L>=3;L--){ const suf=norm.slice(n-L); if(DICT.has(suf)){ const os=map[n-L]; if(os>=2) return tok.slice(0,os)+" "+tok.slice(os); } }
+  return tok;
+}
+function tidy(t){
+  t=t.replace(/[^\n\r\t \u0600-\u06FFA-Za-z0-9.,!?:;'"()\u060C\u061B\u061F\/%@-]/g," ");
+  t=t.split("\n").map(function(line){ return line.split(/\s+/).filter(function(w){ return w&&/[\u0600-\u06FFA-Za-z0-9]/.test(w); }).join(" "); }).join("\n");
+  t=t.replace(/([.,!?:;\u060C\u061B\u061F])\1{2,}/g,"$1");
+  t=t.replace(/[ \t]+([.,!?:;])/g,"$1");
+  return t.replace(/[ \t]+/g," ").replace(/\n{3,}/g,"\n\n").trim();
+}
+function postProcess(text,tidyOn,splitOn){
+  if(tidyOn) text=tidy(text);
+  if(splitOn&&DICT.size){ text=text.split("\n").map(function(line){ return line.split(/(\s+)/).map(function(tok){ return /^\s*$/.test(tok)?tok:splitToken(tok); }).join(""); }).join("\n"); }
+  return text;
+}
+
+/* ---- language + sliders ---- */
+function setDefaultsForLang(l){
+  if(l==="eng"){ dpiSlider.value=300; } else if(l==="ara"){ dpiSlider.value=220; } else { dpiSlider.value=260; }
+  cleanSel.value="otsu"; biasSlider.value=-40; syncDpi(); syncBias();
+}
+function syncDpi(){ dpiVal.textContent=dpiSlider.value+" DPI"; }
+function syncBias(){ biasVal.textContent=(biasSlider.value>0?"+":"")+biasSlider.value; }
+dpiSlider.addEventListener("input",syncDpi); biasSlider.addEventListener("input",syncBias);
+function syncOptimizeUI(){ 
+  const on=optChk.checked; 
+  dpiSlider.disabled=on; zoomSel.disabled=on; cleanSel.disabled=on; biasSlider.disabled=on;
+  $("manualControls").style.opacity = on ? "0.4" : "1";
+}
+optChk.addEventListener("change",syncOptimizeUI);
+$("langSeg").addEventListener("click",function(e){ const b=e.target.closest("button"); if(!b)return; lang=b.dataset.lang; Array.prototype.forEach.call($("langSeg").children,function(c){ c.setAttribute("aria-pressed",String(c===b)); }); setDefaultsForLang(lang); });
+setDefaultsForLang("eng"); syncOptimizeUI();
+
+/* ---- files ---- */
+function isAllowed(f){ return f.type==="application/pdf"||/^image\//.test(f.type)||/\.(png|jpe?g|webp|gif|bmp|pdf)$/i.test(f.name); }
+function addFiles(list){ for(let i=0;i<list.length;i++){ if(isAllowed(list[i])) files.push(list[i]); } renderFiles(); }
+function fmtSize(n){ if(n<1024)return n+" B"; if(n<1048576)return (n/1024).toFixed(0)+" KB"; return (n/1048576).toFixed(1)+" MB"; }
+function fileIcon(p){ return p
+  ? '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#e98b6b" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>'
+  : '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#15b8a6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 16l-5-5L5 20"/></svg>'; }
+function renderFiles(){
+  fileList.innerHTML="";
+  files.forEach(function(f,idx){ const p=f.type==="application/pdf"||/\.pdf$/i.test(f.name); const li=document.createElement("li");
+    li.innerHTML=fileIcon(p)+'<span class="nm"></span><span class="mt">'+fmtSize(f.size)+'</span><button class="rm" aria-label="Remove">&times;</button>';
+    li.querySelector(".nm").textContent=f.name; li.querySelector(".rm").addEventListener("click",function(){ files.splice(idx,1); renderFiles(); }); fileList.appendChild(li); });
+  runBtn.disabled=files.length===0||busy;
+}
+drop.addEventListener("click",function(){ input.click(); });
+drop.addEventListener("keydown",function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); input.click(); } });
+input.addEventListener("change",function(){ addFiles(input.files); input.value=""; });
+["dragenter","dragover"].forEach(function(ev){ drop.addEventListener(ev,function(e){ e.preventDefault(); drop.classList.add("over"); }); });
+["dragleave","drop"].forEach(function(ev){ drop.addEventListener(ev,function(e){ e.preventDefault(); drop.classList.remove("over"); }); });
+drop.addEventListener("drop",function(e){ if(e.dataTransfer&&e.dataTransfer.files) addFiles(e.dataTransfer.files); });
+clearBtn.addEventListener("click",function(){ if(busy)return; files=[]; renderFiles(); results.style.display="none"; errorBox.style.display="none"; output.value=""; output.classList.remove("ai-fixed"); pagesEl.innerHTML=""; });
+function showError(m){ errorBox.textContent=m; errorBox.style.display="block"; }
+
+/* ============================================================ PREPROCESSING ============================================================ */
+function canvasGray(canvas){
+  const ctx=canvas.getContext("2d"),W=canvas.width,H=canvas.height,d=ctx.getImageData(0,0,W,H).data;
+  const gray=new Uint8ClampedArray(W*H);
+  for(let i=0,p=0;i<d.length;i+=4,p++) gray[p]=(d[i]*0.299+d[i+1]*0.587+d[i+2]*0.114)|0;
+  let sum=0; for(let i=0;i<gray.length;i++) sum+=gray[i];
+  if(sum/gray.length<110) for(let i=0;i<gray.length;i++) gray[i]=255-gray[i];
+  return {gray:gray,W:W,H:H};
+}
+function normalize(gray){
+  const hist=new Uint32Array(256),n=gray.length; for(let i=0;i<n;i++) hist[gray[i]]++;
+  let acc=0,lo=0,hi=255;
+  for(let v=0;v<256;v++){ acc+=hist[v]; if(acc>=n*0.02){ lo=v; break; } }
+  acc=0; for(let v=255;v>=0;v--){ acc+=hist[v]; if(acc>=n*0.02){ hi=v; break; } }
+  if(hi<=lo){ lo=0; hi=255; } const s=255/(hi-lo);
+  for(let i=0;i<n;i++){ let x=(gray[i]-lo)*s; gray[i]=x<0?0:x>255?255:x; }
+}
+function sharpenGray(gray,W,H){
+  const out=new Uint8ClampedArray(gray.length),amt=0.7;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){ const i=y*W+x,c=gray[i]; const l=x>0?gray[i-1]:c,r=x<W-1?gray[i+1]:c,u=y>0?gray[i-W]:c,dn=y<H-1?gray[i+W]:c; let v=c+amt*(4*c-l-r-u-dn); out[i]=v<0?0:v>255?255:v; }
+  return out;
+}
+function blurSmall(a,w,h,r){
+  const t=new Float32Array(a.length);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){ let s=0,c=0; for(let k=-r;k<=r;k++){ const xx=x+k; if(xx>=0&&xx<w){ s+=a[y*w+xx]; c++; } } t[y*w+x]=s/c; }
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){ let s=0,c=0; for(let k=-r;k<=r;k++){ const yy=y+k; if(yy>=0&&yy<h){ s+=t[yy*w+x]; c++; } } a[y*w+x]=s/c; }
+}
+function sampleBilinear(a,w,h,fx,fy){
+  let x0=Math.floor(fx),y0=Math.floor(fy); if(x0<0)x0=0; if(y0<0)y0=0; if(x0>w-1)x0=w-1; if(y0>h-1)y0=h-1;
+  const x1=Math.min(w-1,x0+1),y1=Math.min(h-1,y0+1); let wx=fx-Math.floor(fx),wy=fy-Math.floor(fy); if(wx<0)wx=0; if(wx>1)wx=1; if(wy<0)wy=0; if(wy>1)wy=1;
+  return a[y0*w+x0]*(1-wx)*(1-wy)+a[y0*w+x1]*wx*(1-wy)+a[y1*w+x0]*(1-wx)*wy+a[y1*w+x1]*wx*wy;
+}
+function adaptiveBW(gray,W,H,C){
+  const ds=8,bw=Math.max(1,Math.ceil(W/ds)),bh=Math.max(1,Math.ceil(H/ds));
+  const small=new Float32Array(bw*bh),cnt=new Uint32Array(bw*bh);
+  for(let y=0;y<H;y++){ const by=(y/ds)|0; for(let x=0;x<W;x++){ const bi=by*bw+((x/ds)|0); small[bi]+=gray[y*W+x]; cnt[bi]++; } }
+  for(let i=0;i<small.length;i++) small[i]/=(cnt[i]||1); blurSmall(small,bw,bh,2);
+  const out=new Uint8ClampedArray(W*H);
+  for(let y=0;y<H;y++){ const fy=(y+0.5)/ds-0.5; for(let x=0;x<W;x++){ const fx=(x+0.5)/ds-0.5; out[y*W+x]=gray[y*W+x]<(sampleBilinear(small,bw,bh,fx,fy)-C)?0:255; } }
+  return out;
+}
+function sauvolaBW(gray,W,H,bias){
+  const ds=8,bw=Math.max(1,Math.ceil(W/ds)),bh=Math.max(1,Math.ceil(H/ds));
+  const mean=new Float32Array(bw*bh),msq=new Float32Array(bw*bh),cnt=new Uint32Array(bw*bh);
+  for(let y=0;y<H;y++){ const by=(y/ds)|0; for(let x=0;x<W;x++){ const bi=by*bw+((x/ds)|0),v=gray[y*W+x]; mean[bi]+=v; msq[bi]+=v*v; cnt[bi]++; } }
+  for(let i=0;i<mean.length;i++){ const c=cnt[i]||1; mean[i]/=c; msq[i]/=c; } blurSmall(mean,bw,bh,2); blurSmall(msq,bw,bh,2);
+  const k=0.34,R=128,out=new Uint8ClampedArray(W*H);
+  for(let y=0;y<H;y++){ const fy=(y+0.5)/ds-0.5; for(let x=0;x<W;x++){ const fx=(x+0.5)/ds-0.5;
+    const m=sampleBilinear(mean,bw,bh,fx,fy),q=sampleBilinear(msq,bw,bh,fx,fy); let varr=q-m*m; if(varr<0)varr=0; const std=Math.sqrt(varr);
+    out[y*W+x]=gray[y*W+x]<(m*(1+k*(std/R-1))+bias)?0:255; } }
+  return out;
+}
+function otsuBW(gray,bias){
+  const n=gray.length,hist=new Uint32Array(256); for(let i=0;i<n;i++) hist[gray[i]]++;
+  let sumAll=0; for(let v=0;v<256;v++) sumAll+=v*hist[v]; let wB=0,sumB=0,best=0,thr=127;
+  for(let v=0;v<256;v++){ wB+=hist[v]; if(!wB)continue; const wF=n-wB; if(!wF)break; sumB+=v*hist[v]; const mB=sumB/wB,mF=(sumAll-sumB)/wF,bt=wB*wF*(mB-mF)*(mB-mF); if(bt>best){ best=bt; thr=v; } }
+  thr+=(bias||0); const out=new Uint8ClampedArray(n); for(let i=0;i<n;i++) out[i]=gray[i]<thr?0:255; return out;
+}
+function despeckle(mono,W,H){
+  const out=mono.slice();
+  for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){ const i=y*W+x; if(mono[i]!==0)continue; let nb=0;
+    if(mono[i-1]===0)nb++; if(mono[i+1]===0)nb++; if(mono[i-W]===0)nb++; if(mono[i+W]===0)nb++; if(mono[i-W-1]===0)nb++; if(mono[i-W+1]===0)nb++; if(mono[i+W-1]===0)nb++; if(mono[i+W+1]===0)nb++;
+    if(nb<2) out[i]=255; }
+  return out;
+}
+function writeMono(mono,W,H){
+  const c=document.createElement("canvas"); c.width=W; c.height=H; const ctx=c.getContext("2d"),id=ctx.createImageData(W,H),d=id.data;
+  for(let p=0,i=0;p<mono.length;p++,i+=4){ const v=mono[p]; d[i]=d[i+1]=d[i+2]=v; d[i+3]=255; } ctx.putImageData(id,0,0); return c;
+}
+function preprocess(canvas,opts){
+  if(opts.mode==="none") return canvas;
+  const g=canvasGray(canvas); normalize(g.gray);
+  const gray=opts.sharpen?sharpenGray(g.gray,g.W,g.H):g.gray;
+  if(opts.mode==="gray") return writeMono(gray,g.W,g.H);
+  let mono; if(opts.mode==="otsu") mono=otsuBW(gray,opts.bias); else if(opts.mode==="sauvola") mono=sauvolaBW(gray,g.W,g.H,opts.bias); else mono=adaptiveBW(gray,g.W,g.H,12-opts.bias);
+  if(opts.despeckle) mono=despeckle(mono,g.W,g.H);
+  return writeMono(mono,g.W,g.H);
+}
+function zoomCanvas(canvas,f){
+  if(!f||f<=1) return canvas; let W=canvas.width,H=canvas.height;
+  if(W*f*H*f>MAX_AREA) f=Math.sqrt(MAX_AREA/(W*H));
+  if(Math.max(W,H)*f>MAX_SIDE) f=MAX_SIDE/Math.max(W,H);
+  if(f<=1) return canvas;
+  const c=document.createElement("canvas"); c.width=Math.round(W*f); c.height=Math.round(H*f);
+  const ctx=c.getContext("2d"); ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality="high"; ctx.drawImage(canvas,0,0,c.width,c.height); return c;
+}
+function thumbDataURL(canvas){
+  const w=Math.min(200,canvas.width),h=Math.round(canvas.height*(w/canvas.width));
+  const t=document.createElement("canvas"); t.width=w; t.height=h; t.getContext("2d").drawImage(canvas,0,0,w,h);
+  try{ return t.toDataURL("image/jpeg",0.7); }catch(e){ return null; }
+}
+/* deskew */
+function estimateSkew(canvas){
+  const sw=Math.min(520,canvas.width),sh=Math.round(canvas.height*(sw/canvas.width));
+  const t=document.createElement("canvas"); t.width=sw; t.height=sh; t.getContext("2d").drawImage(canvas,0,0,sw,sh);
+  const g=canvasGray(t),bw=otsuBW(g.gray,0),ink=new Uint8Array(sw*sh);
+  for(let i=0;i<ink.length;i++) ink[i]=bw[i]===0?1:0;
+  let bestA=0,bestS=-1;
+  for(let deg=-6;deg<=6;deg+=0.5){ const tan=Math.tan(deg*Math.PI/180),rows=new Float64Array(sh);
+    for(let y=0;y<sh;y++){ let s=0; const shift=Math.round((y-sh/2)*tan); for(let x=0;x<sw;x++){ const xx=x+shift; if(xx>=0&&xx<sw) s+=ink[y*sw+xx]; } rows[y]=s; }
+    let mean=0; for(let y=0;y<sh;y++) mean+=rows[y]; mean/=sh; let v=0; for(let y=0;y<sh;y++){ const d=rows[y]-mean; v+=d*d; } if(v>bestS){ bestS=v; bestA=deg; } }
+  return bestA;
+}
+function rotateCanvas(canvas,deg){ const rad=deg*Math.PI/180,W=canvas.width,H=canvas.height; const c=document.createElement("canvas"); c.width=W; c.height=H; const ctx=c.getContext("2d"); ctx.fillStyle="#fff"; ctx.fillRect(0,0,W,H); ctx.translate(W/2,H/2); ctx.rotate(-rad); ctx.drawImage(canvas,-W/2,-H/2); return c; }
+
+/* ---- rendering ---- */
+function clampScale(w,h,scale){ let s=scale; if(Math.max(w,h)*s>MAX_SIDE) s=MAX_SIDE/Math.max(w,h); if(w*s*h*s>MAX_AREA) s=Math.sqrt(MAX_AREA/(w*h)); return s; }
+function loadImage(file){ return new Promise(function(res,rej){ const url=URL.createObjectURL(file),img=new Image(); img.onload=function(){ URL.revokeObjectURL(url); res(img); }; img.onerror=function(){ URL.revokeObjectURL(url); rej(new Error("Could not read image: "+file.name)); }; img.src=url; }); }
+function imageToCanvas(img,dpi){ const targetLong=dpi*10,long=Math.max(img.width,img.height)||1,s=clampScale(img.width,img.height,Math.min(targetLong/long,6)); const c=document.createElement("canvas"); c.width=Math.max(1,Math.round(img.width*s)); c.height=Math.max(1,Math.round(img.height*s)); const ctx=c.getContext("2d"); ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality="high"; ctx.fillStyle="#fff"; ctx.fillRect(0,0,c.width,c.height); ctx.drawImage(img,0,0,c.width,c.height); return c; }
+async function pdfPageToCanvas(page,dpi){ const base=page.getViewport({scale:1}),s=clampScale(base.width,base.height,dpi/72),vp=page.getViewport({scale:s}); const c=document.createElement("canvas"); c.width=Math.round(vp.width); c.height=Math.round(vp.height); await page.render({canvasContext:c.getContext("2d"),viewport:vp}).promise; return c; }
+function disposeCanvas(c){ if(c){ c.width=0; c.height=0; } }
+function letterRatio(s){ const m=s.match(/[A-Za-z\u0600-\u06FF]/g); return s.length?(m?m.length:0)/s.length:0; }
+async function renderRaw(job,dpi,adv){
+  let raw; if(job.getPage){ const page=await job.getPage(); raw=await pdfPageToCanvas(page,dpi); page.cleanup(); } else raw=imageToCanvas(await loadImage(job.image),dpi);
+  raw.__skew=0; if(adv.deskew){ const a=estimateSkew(raw); if(Math.abs(a)>=0.5){ const r=rotateCanvas(raw,a); disposeCanvas(raw); raw=r; raw.__skew=a; } } return raw;
+}
+
+/* ---- worker ---- */
+async function ensureWorker(useLegacy, modelQual){
+  const langsArr=lang==="auto"?["eng","ara"]:[lang];
+  const sig=langsArr.join("+")+"|"+(useLegacy?"legacy":"lstm")+"|"+modelQual;
+  
+  if(worker&&sig===workerSig) return worker;
+  if(worker){ try{ await worker.terminate(); }catch(e){} worker=null; }
+  
+  const opts={ logger:function(m){ if(m.status==="recognizing text") jobProgress(m.progress); else if(typeof m.progress==="number") pSub.textContent=cap(m.status)+" "+Math.round(m.progress*100)+"%"; } };
+  if(useLegacy){ opts.legacyCore=true; opts.legacyLang=true; }
+  if(modelQual==="best"){ opts.langPath="https://tessdata.projectnaptha.com/4.0.0_best"; }
+  
+  pSub.textContent="Loading OCR Engine ("+modelQual+")...";
+  worker=await Tesseract.createWorker(langsArr, 1, opts); 
+  workerSig=sig; 
+  return worker;
+}
+function cap(s){ return s?(s.charAt(0).toUpperCase()+s.slice(1)+"..."):"Loading..."; }
+async function applyParams(psm,preferDict){
+  const p={ tessedit_pageseg_mode:String(psm), preserve_interword_spaces:"1", user_defined_dpi:"300", load_system_dawg:"1", load_freq_dawg:"1" };
+  if(preferDict){ p.language_model_penalty_non_dict_word="0.4"; p.language_model_penalty_non_freq_dict_word="0.3"; }
+  await worker.setParameters(p);
+}
+async function recognizeOne(canvas){ const r=await worker.recognize(canvas,{},{text:true}); return { text:(r.data.text||"").trim(), conf:(typeof r.data.confidence==="number"?r.data.confidence:0) }; }
+async function ocrSingle(canvas,psm,preferDict){ await applyParams(psm,preferDict); const r=await recognizeOne(canvas); r.which=null; return r; }
+async function ocrBestLang(canvas,psm,preferDict){
+  await worker.reinitialize("eng"); await applyParams(psm,preferDict); const e=await recognizeOne(canvas);
+  await worker.reinitialize("ara"); await applyParams(psm,preferDict); const a=await recognizeOne(canvas);
+  return a.conf>e.conf?{text:a.text,conf:a.conf,which:"Arabic"}:{text:e.text,conf:e.conf,which:"English"};
+}
+
+/* ---- auto-optimize grid ---- */
+function candidateGrid(L, isExhaustive){
+  // Accuracy Edition: More focused sweeps to maximize confidence without stalling out forever.
+  const dpis = L==="eng" ? [240, 300, 360] : [160, 220, 280];
+  const out = [];
+  dpis.forEach(function(d){
+    // Baseline fast OTSU check for each resolution
+    out.push({dpi: d, zoom: 2, clean: "otsu", bias: -40});
+    if(isExhaustive) {
+      // Exhaustive Deep Sweep checks Sauvola and Adaptive for heavy lighting variance
+      out.push({dpi: d, zoom: 2, clean: "sauvola", bias: 0});
+      out.push({dpi: d, zoom: 2, clean: "doc", bias: 0});
+      out.push({dpi: Math.round(d*1.2), zoom: 1.5, clean: "otsu", bias: 0});
+    }
+  });
+  return out;
+}
+function tagOf(dpi,zoom,clean,which,bias){ return dpi+"dpi"+(zoom>1?" x"+zoom:"")+"/"+cleanName(clean)+(bias!==0&&bias!==-40?" "+bias:"")+(which?"/"+which:""); }
+function cleanName(m){ return m==="otsu"?"Otsu":m==="doc"?"adaptive":m==="sauvola"?"Sauvola":m==="gray"?"gray":"raw"; }
+
+/* ---- jobs ---- */
+async function buildJobs(useEmbedded){
+  const jobs=[];
+  for(let i=0;i<files.length;i++){ const f=files[i],isPdf=f.type==="application/pdf"||/\.pdf$/i.test(f.name);
+    if(isPdf){ if(!pdfjsLib) throw new Error("PDF support failed to load. Check your connection and reload."); const doc=await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise,n=doc.numPages;
+      for(let p=1;p<=n;p++){ (function(doc,p,name){ jobs.push({ label:name+" - page "+p+"/"+n, getPage:function(){ return doc.getPage(p); }, useEmbedded:useEmbedded, done:function(){ if(p===n) doc.destroy(); } }); })(doc,p,f.name); } }
+    else { (function(f){ jobs.push({ label:f.name, image:f, done:function(){} }); })(f); } }
+  return jobs;
+}
+
+/* ---- run ---- */
+runBtn.addEventListener("click", async function(){
+  if(busy||files.length===0) return;
+  busy=true; runBtn.disabled=true; clearBtn.disabled=true;
+  errorBox.style.display="none"; results.style.display="none"; pagesEl.innerHTML=""; output.value=""; output.classList.remove("ai-fixed");
+  progress.style.display="block"; setBar(0); pLabel.textContent="Preparing files..."; pSub.textContent="";
+
+  const psm=$("layout").value, useLegacy=psm==="1";
+  const mQuality=$("modelQuality").value, isExhaustive=$("exhaustive").value==="deep";
+  const baseDpi=parseInt(dpiSlider.value,10), baseClean=cleanSel.value, baseBias=parseInt(biasSlider.value,10), baseZoom=parseFloat(zoomSel.value);
+  const adv={ deskew:$("deskew").checked, sharpen:$("sharpen").checked, despeckle:$("despeckle").checked };
+  const preferDict=$("preferdict").checked, tidyOn=$("tidy").checked, splitOn=$("split").checked;
+  const optimize=optChk.checked, isAuto=lang==="auto", useEmbedded=$("embedded").checked;
+  buildDict($("userdict").value);
+  const collected=[];
+
+  try{
+    await ensureWorker(useLegacy, mQuality);
+    const jobs=await buildJobs(useEmbedded); if(jobs.length===0) throw new Error("No readable pages found.");
+
+    for(let i=0;i<jobs.length;i++){
+      const job=jobs[i],baseFrac=i/jobs.length,span=1/jobs.length; pLabel.textContent=job.label;
+
+      if(job.getPage&&job.useEmbedded){
+        pSub.textContent="Checking text layer...";
+        const page=await job.getPage(); let emb="";
+        try{ const tc=await page.getTextContent(); emb=tc.items.map(function(it){return it.str;}).join(" ").replace(/\s+/g," ").trim(); }catch(e){}
+        if(emb.length>=24&&letterRatio(emb)>0.4){ let thumb=null; try{ const pc=await pdfPageToCanvas(page,110); thumb=thumbDataURL(pc); disposeCanvas(pc); }catch(e){}
+          collected.push({label:job.label,text:emb,conf:null,source:"text layer",thumb:thumb}); page.cleanup(); job.done(); setBar((i+1)/jobs.length); continue; }
+        page.cleanup();
+      }
+
+      let resultText="",resultConf=0,resultThumb=null,resultTag="";
+
+      if(!optimize){
+        jobProgress=function(p){ setBar(baseFrac+span*p); };
+        pSub.textContent="Cleaning image..."; await yieldUI();
+        const raw=await renderRaw(job,baseDpi,adv),skew=raw.__skew;
+        const proc=preprocess(raw,{mode:baseClean,bias:baseBias,sharpen:adv.sharpen,despeckle:adv.despeckle});
+        const procZ=zoomCanvas(proc,baseZoom); resultThumb=thumbDataURL(procZ);
+        pSub.textContent="Reading text..."; await yieldUI();
+        const r=isAuto?await ocrBestLang(procZ,psm,preferDict):await ocrSingle(procZ,psm,preferDict);
+        if(procZ!==proc) disposeCanvas(procZ); disposeCanvas(raw); disposeCanvas(proc);
+        resultText=r.text; resultConf=r.conf; resultTag=tagOf(baseDpi,baseZoom,baseClean,r.which,baseBias)+(Math.abs(skew)>=0.5?" deskew"+skew.toFixed(1):"");
+      } else {
+        let L=lang;
+        if(isAuto){ 
+          pSub.textContent="Detecting language..."; await yieldUI();
+          const raw=await renderRaw(job,200,adv); const proc=zoomCanvas(preprocess(raw,{mode:"otsu",bias:-40,sharpen:adv.sharpen,despeckle:adv.despeckle}),2);
+          jobProgress=function(){};
+          const pr=await ocrBestLang(proc,psm,preferDict); L=pr.which==="Arabic"?"ara":"eng";
+          disposeCanvas(raw); if(proc) disposeCanvas(proc);
+          await worker.reinitialize(L);
+        }
+        const cands=candidateGrid(L, isExhaustive); let best=null;
+        for(let ci=0;ci<cands.length;ci++){ 
+          const cd=cands[ci];
+          pSub.textContent="Trying "+cd.dpi+" DPI / "+cleanName(cd.clean)+" ("+(ci+1)+"/"+cands.length+")...";
+          jobProgress=function(p){ setBar(baseFrac+span*((ci+p)/cands.length)); };
+          
+          await yieldUI(); // Allows UI to render progress text before heavy canvas operations
+          
+          const raw=await renderRaw(job,cd.dpi,adv); const proc=preprocess(raw,{mode:cd.clean,bias:cd.bias,sharpen:adv.sharpen,despeckle:adv.despeckle}); const procZ=zoomCanvas(proc,cd.zoom);
+          const r=await ocrSingle(procZ,psm,preferDict);
+          if(!best||r.conf>best.conf){ best={text:r.text,conf:r.conf}; resultThumb=thumbDataURL(procZ); resultTag="best: "+tagOf(cd.dpi,cd.zoom,cd.clean,(isAuto?(L==="ara"?"Arabic":"English"):null),cd.bias); }
+          if(procZ!==proc) disposeCanvas(procZ); disposeCanvas(raw); disposeCanvas(proc);
+        }
+        resultText=best.text; resultConf=best.conf;
+      }
+
+      resultText=postProcess(resultText,tidyOn,splitOn);
+      collected.push({label:job.label,text:resultText,conf:resultConf,source:resultTag,thumb:resultThumb});
+      job.done(); setBar((i+1)/jobs.length);
+    }
+    renderResults(collected);
+  } catch(err){ showError((err&&err.message)?err.message:"Something went wrong during extraction."); }
+  finally{ progress.style.display="none"; busy=false; clearBtn.disabled=false; runBtn.disabled=files.length===0; jobProgress=function(){}; }
+});
+
+function setBar(frac){ const p=Math.max(0,Math.min(1,frac)); pBar.style.width=(p*100).toFixed(1)+"%"; pPct.textContent=Math.round(p*100)+"%"; }
+
+/* ---- results ---- */
+function renderResults(items){
+  const combined=items.map(function(it){ return "===== "+it.label+" =====\n\n"+(it.text||"(no text found)"); }).join("\n\n\n");
+  output.value=combined;
+  const words=combined.trim()?combined.trim().split(/\s+/).length:0;
+  const confs=items.filter(function(i){return i.conf!=null&&i.conf>0;}).map(function(i){return i.conf;});
+  const avg=confs.length?Math.round(confs.reduce(function(a,b){return a+b;},0)/confs.length):null;
+  sPages.innerHTML="<b>"+items.length+"</b> page"+(items.length===1?"":"s"); sWords.innerHTML="<b>"+words+"</b> words"; sConf.innerHTML=avg!=null?"avg confidence <b>"+avg+"%</b>":"";
+  pagesEl.innerHTML="";
+  items.forEach(function(it){
+    const d=document.createElement("details"); d.className="pg";
+    d.innerHTML='<summary><svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2l4 4-4 4"/></svg><span class="ttl"></span><span class="tag"></span></summary><div class="page-body"></div>';
+    d.querySelector(".ttl").textContent=it.label;
+    d.querySelector(".tag").textContent=it.source+(it.conf!=null&&it.conf>0?" "+Math.round(it.conf)+"%":"");
+    const body=d.querySelector(".page-body");
+    if(it.thumb){ const th=document.createElement("div"); th.className="thumb"; th.innerHTML='<img alt="page">'+(it.source.indexOf("text layer")>=0?'':'<div class="cap">what the OCR sees</div>'); th.querySelector("img").src=it.thumb; body.appendChild(th); }
+    const tx=document.createElement("div"); tx.className="page-text"; tx.setAttribute("dir","auto"); tx.textContent=it.text||"(no text found)"; body.appendChild(tx);
+    pagesEl.appendChild(d);
+  });
+  results.style.display="block"; results.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+/* ---- AI correction ---- */
+$("aiFix").addEventListener("click", async function() {
+    const text = output.value.trim();
+    if (!text) return;
+    
+    const btn = this;
+    const oldHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Fixing...';
+    
+    try {
+        const apiKey = ""; 
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+        
+        const promptText = `You are an expert OCR text corrector. Fix spelling, spacing, punctuation, and structural errors caused by optical character recognition.
+- Fix corrupted words (e.g., "1llusion" -> "illusion").
+- Restore natural paragraph flow.
+- DO NOT rewrite, summarize, or change the meaning. Maintain the original language.
+- DO NOT include any conversational filler. ONLY return the corrected text.
+
+Original Text:
+${text}`;
+
+        const payload = {
+            contents: [{ parts: [{ text: promptText }] }],
+            systemInstruction: { parts: [{ text: "You are an expert OCR text corrector." }] }
+        };
+
+        let response = null;
+        let delay = 1000;
+        
+        // Exponential backoff retry logic
+        for (let i = 0; i < 5; i++) {
+            response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (response.ok) break;
+            if (i < 4) await new Promise(r => setTimeout(r, delay *= 2));
+        }
+
+        if (!response || !response.ok) {
+            throw new Error(response ? response.statusText : "Network error");
+        }
+
+        const data = await response.json();
+        const fixedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        
+        if (fixedText) {
+            output.value = fixedText.trim();
+            output.classList.add("ai-fixed");
+            flash(btn, "✨ Fixed!", oldHtml);
+        } else {
+            throw new Error("Empty response from AI");
+        }
+    } catch (err) {
+        let msg = err.message.includes("key") ? "API key required for AI features." : err.message;
+        alert("AI Correction Error: " + msg);
+        flash(btn, "Error", oldHtml);
+    } finally {
+        setTimeout(() => { if(!btn.textContent.includes("Fixed!")) btn.innerHTML = oldHtml; btn.disabled = false; }, 1200);
+    }
+});
+
+/* ---- copy / download ---- */
+$("copy").addEventListener("click", async function(){ try{ await navigator.clipboard.writeText(output.value); flash($("copy"),"Copied", $("copy").innerHTML); }catch(e){ output.select(); document.execCommand("copy"); flash($("copy"),"Copied", $("copy").innerHTML); } });
+$("download").addEventListener("click", function(){ const b=new Blob([output.value],{type:"text/plain;charset=utf-8"}),u=URL.createObjectURL(b),a=document.createElement("a"); a.href=u; a.download="ocr-text.txt"; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(function(){ URL.revokeObjectURL(u); },1000); });
+function flash(btn,txt,old){ btn.textContent=txt; setTimeout(function(){ btn.innerHTML=old; },1200); }
+
+window.addEventListener("load", function(){ if(typeof Tesseract==="undefined") showError("The OCR engine failed to load. If you opened this inside the app preview, deploy the file or open it in a normal browser tab."); });
+</script>
+</body>
+</html>
+
+
